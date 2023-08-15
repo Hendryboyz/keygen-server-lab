@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-keygen-api-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "basic.labels" . | indent 4 }}
+spec:
+  selector:
+    app: kengen-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

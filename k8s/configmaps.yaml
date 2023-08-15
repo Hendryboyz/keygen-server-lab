@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keygen-config
+  namespace: builtin-infra
+data:
+  KEYGEN_ACCOUNT_ID: 115d469c-6969-419f-8e4f-f75224f936b7
+  KEYGEN_HOST: api.keygen.localhost
+  DATABASE_URL: postgres://postgres:postgres@keygen-postgres-service.builtin-infra.svc.cluster.local:5432/postgres
+  REDIS_URL: redis://asr-redis-service.builtin-infra.svc.cluster.local:6379

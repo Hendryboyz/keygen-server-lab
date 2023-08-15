@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kengen-deployment
+  namespace: builtin-infra
+spec:
+  replicas: 1  # Set the number of desired replicas here
+  selector:
+    matchLabels:
+      app: kengen-api
+  
+  template:
+    metadata:
+      labels:
+        app: kengen-api
+    spec:
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: tls-secret
+        secret:
+          secretName: tls-secret
+      - name: client-tls-secret
+        secret:
+          secretName: client-tls-secret
+      containers:
+      - name: keygen-proxy
+        image: nginx:stable-alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+        - name: tls-secret
+          mountPath: /etc/nginx/certs/server/
+          readOnly: true
+        - name: client-tls-secret
+          mountPath: /etc/nginx/certs/client/
+          readOnly: true
+      - name: kengen-api
+        image: keygen/api:v1.0.2
+        args:
+          - web
+        env:
+          - name: KEYGEN_EDITION
+            value: CE
+          - name: KEYGEN_MODE
+            value: singleplayer
+          - name: KEYGEN_ACCOUNT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: KEYGEN_ACCOUNT_ID
+          - name: KEYGEN_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: KEYGEN_HOST
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: DATABASE_URL
+          - name: REDIS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: REDIS_URL
+          - name: SECRET_KEY_BASE
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: SECRET_KEY_BASE
+          - name: ENCRYPTION_DETERMINISTIC_KEY
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: ENCRYPTION_DETERMINISTIC_KEY
+          - name: ENCRYPTION_PRIMARY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: ENCRYPTION_PRIMARY_KEY
+          - name: ENCRYPTION_KEY_DERIVATION_SALT
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: ENCRYPTION_KEY_DERIVATION_SALT
+        ports:
+            - containerPort: 3000
+      - name: kengen-worker
+        image: keygen/api:v1.0.2
+        args:
+          - worker
+        env:
+          - name: KEYGEN_EDITION
+            value: CE
+          - name: KEYGEN_MODE
+            value: singleplayer
+          - name: KEYGEN_ACCOUNT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: KEYGEN_ACCOUNT_ID
+          - name: KEYGEN_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: KEYGEN_HOST
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: DATABASE_URL
+          - name: REDIS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: keygen-config
+                key: REDIS_URL
+          - name: SECRET_KEY_BASE
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: SECRET_KEY_BASE
+          - name: ENCRYPTION_DETERMINISTIC_KEY
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: ENCRYPTION_DETERMINISTIC_KEY
+          - name: ENCRYPTION_PRIMARY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: ENCRYPTION_PRIMARY_KEY
+          - name: ENCRYPTION_KEY_DERIVATION_SALT
+            valueFrom:
+              secretKeyRef:
+                name: keygen-secrets
+                key: ENCRYPTION_KEY_DERIVATION_SALT
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keygen-api-service
+  namespace: builtin-infra
+spec:
+  selector:
+    app: kengen-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+# curl -L http://keygen-api-service.builtin-infra.svc.cluster.local/v1/ping

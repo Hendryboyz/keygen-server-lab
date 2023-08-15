@@ -1,0 +1,35 @@
+# Default values for keygen-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  proxy:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    tag: stable-alpine
+  server:
+    repository:  keygen/api
+    pullPolicy: IfNotPresent
+    tag: v1.0.2
+
+keygen:
+  db:
+    user: postgres
+    password: postgres
+    port: 5432
+    database: postgres
+  config:
+    accountId: 115d469c-6969-419f-8e4f-f75224f936b7
+    apiHost: api.keygen.localhost
+  secret:
+    adminEmail: no-reply@ailabs.tw
+    adminPassword: EKdeXNTAwnHRSFtk5M4fe07dgKpYx+dzq5zotLBkrkE=
+    encryptionDeterministicKey: 8dX7V8dcAGrLEfKtGieY5SGCYgdF556haqKC3baqcL8=
+    encryptionKeyDerivationSalt: f1QDgdDTLRkrK0AAqRYT+gKFMPVOC/3jPLpoyRETYg=
+    encryptionPrimaryKey: N/KiP7YtZUUqIOBQlP/WDi/bIUNEQWfBtAzxPPg/WTa265I=
+    secretKeyBase: 7bb0c565bee1f6f5c069880f60fec0fba31eec6ca5cc3d80a7295b33611338603cf3db6ec5705a5abde5fb54ec3d425ca30bfece5ed32511f303929ad2e31eba
+
+    
+

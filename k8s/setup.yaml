@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keygen-setup
+  namespace: builtin-infra
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: keygen-setup
+          tty: true
+          image: keygen/api:v1.0.2
+          args: ["setup"]
+          env:
+            - name: DISABLE_DATABASE_ENVIRONMENT_CHECK
+              value: '1'
+            - name: KEYGEN_EDITION
+              value: CE
+            - name: KEYGEN_MODE
+              value: singleplayer
+            - name: KEYGEN_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: keygen-secrets
+                  key: ADMIN_EMAIL
+            - name: KEYGEN_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keygen-secrets
+                  key: ADMIN_PASSWORD
+            - name: KEYGEN_ACCOUNT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: keygen-config
+                  key: KEYGEN_ACCOUNT_ID
+            - name: KEYGEN_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: keygen-config
+                  key: KEYGEN_HOST
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: keygen-config
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: keygen-config
+                  key: REDIS_URL
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: keygen-secrets
+                  key: SECRET_KEY_BASE
+            - name: ENCRYPTION_DETERMINISTIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: keygen-secrets
+                  key: ENCRYPTION_DETERMINISTIC_KEY
+            - name: ENCRYPTION_PRIMARY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: keygen-secrets
+                  key: ENCRYPTION_PRIMARY_KEY
+            - name: ENCRYPTION_KEY_DERIVATION_SALT
+              valueFrom:
+                secretKeyRef:
+                  name: keygen-secrets
+                  key: ENCRYPTION_KEY_DERIVATION_SALT

@@ -1,0 +1,356 @@
+NAME: small-parrot
+LAST DEPLOYED: Tue Aug 15 11:47:13 2023
+NAMESPACE: infra
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: keygen-chart/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: small-parrot-keygen-secrets
+  namespace: infra
+  labels:    
+    generator: helm
+    date: 2023-08-15
+    chart: keygen-chart
+    version: 0.1.0
+type: Opaque
+data:
+  ADMIN_EMAIL: bm8tcmVwbHlAYWlsYWJzLnR3
+  ADMIN_PASSWORD: RUtkZVhOVEF3bkhSU0Z0azVNNGZlMDdkZ0twWXgrZHpxNXpvdExCa3JrRT0=
+  SECRET_KEY_BASE: N2JiMGM1NjViZWUxZjZmNWMwNjk4ODBmNjBmZWMwZmJhMzFlZWM2Y2E1Y2MzZDgwYTcyOTViMzM2MTEzMzg2MDNjZjNkYjZlYzU3MDVhNWFiZGU1ZmI1NGVjM2Q0MjVjYTMwYmZlY2U1ZWQzMjUxMWYzMDM5MjlhZDJlMzFlYmE=
+  ENCRYPTION_DETERMINISTIC_KEY: OGRYN1Y4ZGNBR3JMRWZLdEdpZVk1U0dDWWdkRjU1NmhhcUtDM2JhcWNMOD0=
+  ENCRYPTION_PRIMARY_KEY: Ti9LaVA3WXRaVVVxSU9CUWxQL1dEaS9iSVVORVFXZkJ0QXp4UFBnL1dUYTI2NUk9
+  ENCRYPTION_KEY_DERIVATION_SALT: ZjFRRGdkRFRMUmtySzBBQXFSWVQrZ0tGTVBWT0MvM2pQTHBveVJFVFlnPQ==
+---
+# Source: keygen-chart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: small-parrot-keygen-config
+  namespace: infra
+  labels:    
+    generator: helm
+    date: 2023-08-15
+    chart: keygen-chart
+    version: 0.1.0
+data:
+  KEYGEN_ACCOUNT_ID: 115d469c-6969-419f-8e4f-f75224f936b7
+  KEYGEN_HOST: api.keygen.localhost
+  DATABASE_URL: postgres://postgres:postgres@keygen-postgres-service.builtin-infra.svc.cluster.local:5432/postgres
+  REDIS_URL: redis://asr-redis-service.builtin-infra.svc.cluster.local:6379
+---
+# Source: keygen-chart/templates/reverseproxy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: small-parrot-reverseproxy-config
+  namespace: infra
+  labels:    
+    generator: helm
+    date: 2023-08-15
+    chart: keygen-chart
+    version: 0.1.0
+data:
+  nginx.conf: |
+    server {
+      listen 80;
+      server_name small-parrot-keygen-api-service.infra.svc.cluster.local;
+  
+      location / {
+        proxy_pass https://api.keygen.localhost;
+        proxy_ssl_certificate         /etc/nginx/certs/client/client.pem;
+        proxy_ssl_certificate_key     /etc/nginx/certs/client/client.key;
+        proxy_ssl_protocols           TLSv1 TLSv1.1 TLSv1.2;
+        proxy_ssl_ciphers             HIGH:!aNULL:!MD5;
+        proxy_ssl_trusted_certificate /etc/nginx/certs/client/trusted_ca_cert.crt;
+  
+        proxy_ssl_verify        on;
+        proxy_ssl_verify_depth  2;
+        proxy_ssl_session_reuse on;
+      }
+    }
+  
+    upstream keygen-api {
+      server localhost:3000;
+    }
+  
+    server {
+      listen 443 ssl;
+      server_name api.keygen.localhost;
+  
+      ssl_certificate /etc/nginx/certs/server/tls.crt;
+      ssl_certificate_key /etc/nginx/certs/server/tls.key;
+      # ssl_verify_client optional;
+  
+      location / {
+        # Assuming the service name for kengen-api is 'kengen-api'
+        proxy_pass http://keygen-api;
+        # => $host
+        proxy_set_header Host $http_host;
+        # => "https"
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # => 0.0.0.0
+        proxy_set_header X-Forwarded-Host $host;
+        # => 3000
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  
+        # Additional proxy settings if needed
+      }
+    }
+  
+    # kubectl create configmap nginx-config -n builtin-infra --from-file=./nginx.conf -o yaml --dry-run=client | kubectl apply -f -
+---
+# Source: keygen-chart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: small-parrot-keygen-api-service
+  namespace: infra
+  labels:    
+    generator: helm
+    date: 2023-08-15
+    chart: keygen-chart
+    version: 0.1.0
+spec:
+  selector:
+    app: kengen-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Source: keygen-chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: small-parrot-kengen-server
+  namespace: infra
+  labels:    
+    generator: helm
+    date: 2023-08-15
+    chart: keygen-chart
+    version: 0.1.0
+spec:
+  replicas: 1  # Set the number of desired replicas here
+  selector:
+    matchLabels:
+      app: kengen-api
+  template:
+    metadata:
+      labels:
+        app: kengen-api
+    spec:
+      volumes:
+      - name: proxy-config
+        configMap:
+          name: small-parrot-reverseproxy-config
+      - name: tls-secret
+        secret:
+          secretName: tls-secret
+      - name: client-tls-secret
+        secret:
+          secretName: client-tls-secret
+      containers:
+      - name: keygen-proxy
+        image: nginx:stable-alpine
+        imagePullPolicy:  IfNotPresent
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: proxy-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+        - name: tls-secret
+          mountPath: /etc/nginx/certs/server/
+          readOnly: true
+        - name: client-tls-secret
+          mountPath: /etc/nginx/certs/client/
+          readOnly: true
+      - name: kengen-api
+        image: keygen/api.v1.0.2
+        imagePullPolicy:  IfNotPresent
+        args:
+          - web
+        env:
+          - name: KEYGEN_EDITION
+            value: CE
+          - name: KEYGEN_MODE
+            value: singleplayer
+          - name: KEYGEN_ACCOUNT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: KEYGEN_ACCOUNT_ID
+          - name: KEYGEN_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: KEYGEN_HOST
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: DATABASE_URL
+          - name: REDIS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: REDIS_URL
+          - name: SECRET_KEY_BASE
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: SECRET_KEY_BASE
+          - name: ENCRYPTION_DETERMINISTIC_KEY
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: ENCRYPTION_DETERMINISTIC_KEY
+          - name: ENCRYPTION_PRIMARY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: ENCRYPTION_PRIMARY_KEY
+          - name: ENCRYPTION_KEY_DERIVATION_SALT
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: ENCRYPTION_KEY_DERIVATION_SALT
+        ports:
+            - containerPort: 3000
+      - name: kengen-worker
+        image: keygen/api.v1.0.2
+        imagePullPolicy:  IfNotPresent
+        args:
+          - worker
+        env:
+          - name: KEYGEN_EDITION
+            value: CE
+          - name: KEYGEN_MODE
+            value: singleplayer
+          - name: KEYGEN_ACCOUNT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: KEYGEN_ACCOUNT_ID
+          - name: KEYGEN_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: KEYGEN_HOST
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: DATABASE_URL
+          - name: REDIS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: small-parrot-keygen-config
+                key: REDIS_URL
+          - name: SECRET_KEY_BASE
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: SECRET_KEY_BASE
+          - name: ENCRYPTION_DETERMINISTIC_KEY
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: ENCRYPTION_DETERMINISTIC_KEY
+          - name: ENCRYPTION_PRIMARY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: ENCRYPTION_PRIMARY_KEY
+          - name: ENCRYPTION_KEY_DERIVATION_SALT
+            valueFrom:
+              secretKeyRef:
+                name: small-parrot-keygen-secrets
+                key: ENCRYPTION_KEY_DERIVATION_SALT
+---
+# Source: keygen-chart/templates/configure.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: small-parrot-keygen-setup
+  namespace: infra
+  labels:    
+    generator: helm
+    date: 2023-08-15
+    chart: keygen-chart
+    version: 0.1.0
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: keygen-setup
+          tty: true
+          image: keygen/api.v1.0.2
+          imagePullPolicy:  IfNotPresent
+          args: ["setup"]
+          env:
+            - name: DISABLE_DATABASE_ENVIRONMENT_CHECK
+              value: '1'
+            - name: KEYGEN_EDITION
+              value: CE
+            - name: KEYGEN_MODE
+              value: singleplayer
+            - name: KEYGEN_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: small-parrot-keygen-secrets
+                  key: ADMIN_EMAIL
+            - name: KEYGEN_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: small-parrot-keygen-secrets
+                  key: ADMIN_PASSWORD
+            - name: KEYGEN_ACCOUNT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: small-parrot-keygen-config
+                  key: KEYGEN_ACCOUNT_ID
+            - name: KEYGEN_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: small-parrot-keygen-config
+                  key: KEYGEN_HOST
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: small-parrot-keygen-config
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: small-parrot-keygen-config
+                  key: REDIS_URL
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: small-parrot-keygen-secrets
+                  key: SECRET_KEY_BASE
+            - name: ENCRYPTION_DETERMINISTIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: small-parrot-keygen-secrets
+                  key: ENCRYPTION_DETERMINISTIC_KEY
+            - name: ENCRYPTION_PRIMARY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: small-parrot-keygen-secrets
+                  key: ENCRYPTION_PRIMARY_KEY
+            - name: ENCRYPTION_KEY_DERIVATION_SALT
+              valueFrom:
+                secretKeyRef:
+                  name: small-parrot-keygen-secrets
+                  key: ENCRYPTION_KEY_DERIVATION_SALT
+

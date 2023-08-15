@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-kengen-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "basic.labels" . | indent 4 }}
+spec:
+  replicas: 1  # Set the number of desired replicas here
+  selector:
+    matchLabels:
+      app: kengen-api
+  template:
+    metadata:
+      labels:
+        app: kengen-api
+    spec:
+      volumes:
+      - name: proxy-config
+        configMap:
+          name: {{ .Release.Name }}-reverseproxy-config
+      - name: tls-secret
+        secret:
+          secretName: tls-secret
+      - name: client-tls-secret
+        secret:
+          secretName: client-tls-secret
+      containers:
+      - name: keygen-proxy
+        image: {{ .Values.image.proxy.repository }}:{{ .Values.image.proxy.tag }}
+        imagePullPolicy:  {{ .Values.image.proxy.pullPolicy }}
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: proxy-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+        - name: tls-secret
+          mountPath: /etc/nginx/certs/server/
+          readOnly: true
+        - name: client-tls-secret
+          mountPath: /etc/nginx/certs/client/
+          readOnly: true
+      - name: kengen-api
+        image: {{ .Values.image.server.repository }}.{{ .Values.image.server.tag }}
+        imagePullPolicy:  {{ .Values.image.server.pullPolicy }}
+        args:
+          - web
+        env:
+          - name: KEYGEN_EDITION
+            value: CE
+          - name: KEYGEN_MODE
+            value: singleplayer
+          - name: KEYGEN_ACCOUNT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: KEYGEN_ACCOUNT_ID
+          - name: KEYGEN_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: KEYGEN_HOST
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: DATABASE_URL
+          - name: REDIS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: REDIS_URL
+          - name: SECRET_KEY_BASE
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: SECRET_KEY_BASE
+          - name: ENCRYPTION_DETERMINISTIC_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: ENCRYPTION_DETERMINISTIC_KEY
+          - name: ENCRYPTION_PRIMARY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: ENCRYPTION_PRIMARY_KEY
+          - name: ENCRYPTION_KEY_DERIVATION_SALT
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: ENCRYPTION_KEY_DERIVATION_SALT
+        ports:
+            - containerPort: 3000
+      - name: kengen-worker
+        image: {{ .Values.image.server.repository }}.{{ .Values.image.server.tag }}
+        imagePullPolicy:  {{ .Values.image.server.pullPolicy }}
+        args:
+          - worker
+        env:
+          - name: KEYGEN_EDITION
+            value: CE
+          - name: KEYGEN_MODE
+            value: singleplayer
+          - name: KEYGEN_ACCOUNT_ID
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: KEYGEN_ACCOUNT_ID
+          - name: KEYGEN_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: KEYGEN_HOST
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: DATABASE_URL
+          - name: REDIS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-keygen-config
+                key: REDIS_URL
+          - name: SECRET_KEY_BASE
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: SECRET_KEY_BASE
+          - name: ENCRYPTION_DETERMINISTIC_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: ENCRYPTION_DETERMINISTIC_KEY
+          - name: ENCRYPTION_PRIMARY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: ENCRYPTION_PRIMARY_KEY
+          - name: ENCRYPTION_KEY_DERIVATION_SALT
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-keygen-secrets
+                key: ENCRYPTION_KEY_DERIVATION_SALT

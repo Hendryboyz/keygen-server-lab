@@ -1,0 +1,90 @@
+version: "2"
+
+services:
+  worker:
+    platform: linux/x86_64
+    container_name: kengen-worker
+    image: "keygen/api:latest"
+    command:
+      - worker
+    environment:
+      - KEYGEN_EDITION=CE
+      - KEYGEN_MODE=singleplayer
+      - KEYGEN_ACCOUNT_ID=${KEYGEN_ACCOUNT_ID}
+      - KEYGEN_HOST=api.keygen.localhost
+      - DATABASE_URL=postgres://postgres:postgres@host.docker.internal:5432/postgres
+      - REDIS_URL=redis://host.docker.internal:6379
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - ENCRYPTION_DETERMINISTIC_KEY=${ENCRYPTION_DETERMINISTIC_KEY}
+      - ENCRYPTION_PRIMARY_KEY=${ENCRYPTION_PRIMARY_KEY}
+      - ENCRYPTION_KEY_DERIVATION_SALT=${ENCRYPTION_KEY_DERIVATION_SALT}
+    volumes:
+      - ./keygen:/etc/keygen
+    depends_on:
+      - db
+      - redis
+  web:
+    platform: linux/x86_64
+    container_name: kengen-api
+    image: "keygen/api:latest"
+    command:
+      - web
+    environment:
+      - KEYGEN_EDITION=CE
+      - KEYGEN_MODE=singleplayer
+      - KEYGEN_ACCOUNT_ID=${KEYGEN_ACCOUNT_ID}
+      - KEYGEN_HOST=api.keygen.localhost
+      - DATABASE_URL=postgres://postgres:postgres@host.docker.internal:5432/postgres
+      - REDIS_URL=redis://host.docker.internal:6379
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - ENCRYPTION_DETERMINISTIC_KEY=${ENCRYPTION_DETERMINISTIC_KEY}
+      - ENCRYPTION_PRIMARY_KEY=${ENCRYPTION_PRIMARY_KEY}
+      - ENCRYPTION_KEY_DERIVATION_SALT=${ENCRYPTION_KEY_DERIVATION_SALT}
+    volumes:
+      - ./keygen:/etc/keygen
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "3000:3000"
+  setup:
+    platform: linux/x86_64
+    container_name: kengen-setup
+    image: "keygen/api:latest"
+    command:
+      - setup
+    environment:
+      - KEYGEN_EDITION=CE
+      - KEYGEN_MODE=singleplayer
+      - KEYGEN_ACCOUNT_ID=${KEYGEN_ACCOUNT_ID}
+      - KEYGEN_HOST=api.keygen.localhost
+      - DATABASE_URL=postgres://postgres:postgres@host.docker.internal:5432/postgres
+      - REDIS_URL=redis://host.docker.internal:6379
+      - SECRET_KEY_BASE=$SECRET_KEY_BASE
+      - ENCRYPTION_DETERMINISTIC_KEY=${ENCRYPTION_DETERMINISTIC_KEY}
+      - ENCRYPTION_PRIMARY_KEY=${ENCRYPTION_PRIMARY_KEY}
+      - ENCRYPTION_KEY_DERIVATION_SALT=${ENCRYPTION_KEY_DERIVATION_SALT}
+    depends_on:
+      - db
+      - redis
+    profiles:
+      - setup
+  db:
+    container_name: keygen-postgres
+    image: "postgres:15.3-alpine3.18"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  redis:
+    container_name: kengen-redis
+    image: "redis:7-alpine"
+    volumes:
+      - redis:/var/lib/redis/data
+    ports:
+      - "6379:6379"
+volumes:
+  postgres:
+  redis:

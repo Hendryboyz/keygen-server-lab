@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-keygen-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "basic.labels" . | indent 4 }}
+data:
+  KEYGEN_ACCOUNT_ID: {{ .Values.keygen.config.accountId | default uuidv4 }}
+  KEYGEN_HOST: {{ .Values.keygen.config.apiHost }}
+  DATABASE_URL: postgres://postgres:postgres@keygen-postgres-service.builtin-infra.svc.cluster.local:5432/postgres
+  REDIS_URL: redis://asr-redis-service.builtin-infra.svc.cluster.local:6379

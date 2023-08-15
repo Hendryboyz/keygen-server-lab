@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-reverseproxy-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "basic.labels" . | indent 4 }}
+data:
+{{ (tpl (.Files.Glob "configs/nginx.conf").AsConfig $) | indent 2 }}
+
+    
