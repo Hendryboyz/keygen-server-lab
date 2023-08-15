@@ -1,0 +1,118 @@
+{{- if .Release.IsInstall }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-keygen-redis-pvc
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-keygen-redis-deployment
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keygen-redis
+  template:
+    metadata:
+      labels:
+        app: keygen-redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}:{{ .Values.redis.tag }}
+          imagePullPolicy:  {{ .Values.redis.pullPolicy }}
+          ports:
+            - containerPort: 6379
+              name: redis-default-port
+          volumeMounts:
+            - name: redis-persistent-storage
+              mountPath: /data
+      volumes:
+        - name: redis-persistent-storage
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-redis-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-keygen-postgres-pvc
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-keygen-postgres-deployment
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keygen-postgres
+  template:
+    metadata:
+      labels:
+        app: keygen-postgres
+    spec:
+      containers:
+        - name: keygen-postgres
+          image: {{ .Values.postgres.image }}:{{ .Values.postgres.tag }}
+          imagePullPolicy:  {{ .Values.postgres.pullPolicy }}
+          ports:
+            - containerPort: 5432
+              name: postgres-default-port
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.defaultDb }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.credentials.username }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.credentials.password }}
+          volumeMounts:
+            - name: keygen-postgres-persistent-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: keygen-postgres-persistent-storage
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-keygen-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-keygen-redis-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: keygen-redis
+  ports:
+    - protocol: TCP
+      port: {{ .Values.redis.port }}
+      targetPort: redis-default-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-keygen-postgres-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: keygen-postgres
+  ports:
+    - protocol: TCP
+      port: {{ .Values.postgres.port }}
+      targetPort: postgres-default-port
+{{- end }}

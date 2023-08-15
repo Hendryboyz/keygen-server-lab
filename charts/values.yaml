@@ -15,11 +15,6 @@ image:
     tag: v1.0.2
 
 keygen:
-  db:
-    user: postgres
-    password: postgres
-    port: 5432
-    database: postgres
   config:
     accountId: 115d469c-6969-419f-8e4f-f75224f936b7
     apiHost: api.keygen.localhost
@@ -31,5 +26,19 @@ keygen:
     encryptionPrimaryKey: N/KiP7YtZUUqIOBQlP/WDi/bIUNEQWfBtAzxPPg/WTa265I=
     secretKeyBase: 7bb0c565bee1f6f5c069880f60fec0fba31eec6ca5cc3d80a7295b33611338603cf3db6ec5705a5abde5fb54ec3d425ca30bfece5ed32511f303929ad2e31eba
 
-    
 
+redis:
+  image: redis
+  tag: 6.2.13-alpine3.18
+  pullPolicy: IfNotPresent
+  port: 6379
+
+postgres:
+  image: postgres
+  tag: 12.15-alpine3.18
+  pullPolicy: IfNotPresent
+  port: 5432
+  defaultDb: postgres
+  credentials:
+    username: postgres
+    password: postgres
