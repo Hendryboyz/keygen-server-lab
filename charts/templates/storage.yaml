@@ -39,7 +39,7 @@ spec:
       volumes:
         - name: redis-persistent-storage
           persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-redis-pvc
+            claimName: {{ .Release.Name }}-keygen-redis-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
