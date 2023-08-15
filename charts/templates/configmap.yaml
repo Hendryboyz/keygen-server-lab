@@ -8,5 +8,13 @@ metadata:
 data:
   KEYGEN_ACCOUNT_ID: {{ .Values.keygen.config.accountId | default uuidv4 }}
   KEYGEN_HOST: {{ .Values.keygen.config.apiHost }}
-  DATABASE_URL: postgres://postgres:postgres@keygen-postgres-service.builtin-infra.svc.cluster.local:5432/postgres
-  REDIS_URL: redis://asr-redis-service.builtin-infra.svc.cluster.local:6379
+  {{- with .Values.postgres }}
+  {{- $dbService := (printf "%s-keygen-postgres-service" $.Release.Name) }}
+  {{- $dbUrl := (printf "postgres://%s:%s@%s.%s.svc.cluster.local:%d/%s" .credentials.username .credentials.password $dbService $.Release.Namespace (.port | int) .defaultDb ) }}
+  DATABASE_URL: {{ $dbUrl }}
+  {{- end }}
+  {{- with .Values.redis }}
+  {{- $redisService := (printf "%s-keygen-redis-service" $.Release.Name) }}
+  {{- $redisUrl := (printf "redis://%s.%s.svc.cluster.local:%d" $redisService $.Release.Namespace (.port | int) ) }}
+  REDIS_URL: {{ $redisUrl }}
+  {{- end }}
