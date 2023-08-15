@@ -32,7 +32,7 @@ spec:
           imagePullPolicy:  {{ .Values.redis.pullPolicy }}
           ports:
             - containerPort: 6379
-              name: redis-default-port
+              name: redis-port
           volumeMounts:
             - name: redis-persistent-storage
               mountPath: /data
@@ -74,7 +74,7 @@ spec:
           imagePullPolicy:  {{ .Values.postgres.pullPolicy }}
           ports:
             - containerPort: 5432
-              name: postgres-default-port
+              name: postgres-port
           env:
             - name: POSTGRES_DB
               value: {{ .Values.postgres.defaultDb }}
@@ -101,7 +101,7 @@ spec:
   ports:
     - protocol: TCP
       port: {{ .Values.redis.port }}
-      targetPort: redis-default-port
+      targetPort: redis-port
 ---
 apiVersion: v1
 kind: Service
@@ -114,5 +114,5 @@ spec:
   ports:
     - protocol: TCP
       port: {{ .Values.postgres.port }}
-      targetPort: postgres-default-port
+      targetPort: postgres-port
 {{- end }}

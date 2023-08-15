@@ -42,7 +42,7 @@ spec:
           mountPath: /etc/nginx/certs/client/
           readOnly: true
       - name: kengen-api
-        image: {{ .Values.image.server.repository }}.{{ .Values.image.server.tag }}
+        image: {{ .Values.image.server.repository }}:{{ .Values.image.server.tag }}
         imagePullPolicy:  {{ .Values.image.server.pullPolicy }}
         args:
           - web
@@ -94,7 +94,7 @@ spec:
         ports:
             - containerPort: 3000
       - name: kengen-worker
-        image: {{ .Values.image.server.repository }}.{{ .Values.image.server.tag }}
+        image: {{ .Values.image.server.repository }}:{{ .Values.image.server.tag }}
         imagePullPolicy:  {{ .Values.image.server.pullPolicy }}
         args:
           - worker

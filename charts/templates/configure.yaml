@@ -13,7 +13,7 @@ spec:
       containers:
         - name: keygen-setup
           tty: true
-          image: {{ .Values.image.server.repository }}.{{ .Values.image.server.tag }}
+          image: {{ .Values.image.server.repository }}:{{ .Values.image.server.tag }}
           imagePullPolicy:  {{ .Values.image.server.pullPolicy }}
           args: ["setup"]
           env:
