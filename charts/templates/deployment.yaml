@@ -19,12 +19,12 @@ spec:
       - name: proxy-config
         configMap:
           name: {{ .Release.Name }}-reverseproxy-config
-      - name: tls-secret
+      - name: keygen-tls
         secret:
-          secretName: tls-secret
-      - name: client-tls-secret
+          secretName: {{ .Release.Name }}-keygen-tls
+      - name: proxy-tls
         secret:
-          secretName: client-tls-secret
+          secretName: {{ .Release.Name }}-proxy-tls
       containers:
       - name: keygen-proxy
         image: {{ .Values.image.proxy.repository }}:{{ .Values.image.proxy.tag }}
@@ -35,10 +35,10 @@ spec:
         - name: proxy-config
           mountPath: /etc/nginx/conf.d/default.conf
           subPath: nginx.conf
-        - name: tls-secret
+        - name: keygen-tls
           mountPath: /etc/nginx/certs/server/
           readOnly: true
-        - name: client-tls-secret
+        - name: proxy-tls
           mountPath: /etc/nginx/certs/client/
           readOnly: true
       - name: kengen-api

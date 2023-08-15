@@ -1,0 +1,15 @@
+{{- if .Release.IsInstall }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-keygen-tls
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "basic.labels" . | indent 4 }}
+type: kubernetes.io/tls
+data:
+  {{- $cn := "api.keygen.localhost" }}
+  {{- $cert := genSelfSignedCert $cn nil nil 365 }}
+  tls.crt: {{ $cert.Cert | b64enc }}
+  tls.key: {{ $cert.Key | b64enc }}
+{{- end  }}
