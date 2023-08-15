@@ -12,4 +12,19 @@ data:
   {{- $cert := genSelfSignedCert $cn nil nil 365 }}
   tls.crt: {{ $cert.Cert | b64enc }}
   tls.key: {{ $cert.Key | b64enc }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-proxy-tls
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "basic.labels" . | indent 4 }}
+type: Opaque
+data:
+  {{- $serviceCN := (printf "%s-keygen-api-service.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}
+  {{- $proxyCert := genSelfSignedCert $serviceCN nil nil 365 }}
+  tls.pem: {{ $proxyCert.Cert | b64enc }}
+  tls.key: {{ $proxyCert.Key | b64enc }}
+  trusted_ca_cert.crt: {{ $cert.Cert | b64enc }}
 {{- end  }}
