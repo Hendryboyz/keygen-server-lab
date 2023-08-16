@@ -32,6 +32,10 @@ redis:
   tag: 6.2.13-alpine3.18
   pullPolicy: IfNotPresent
   port: 6379
+  volumes:
+    storageClass: nfs-asr-2-nas2-hdd
+    size: 1Gi
+
 
 postgres:
   image: postgres
@@ -39,6 +43,9 @@ postgres:
   pullPolicy: IfNotPresent
   port: 5432
   defaultDb: postgres
+  volumes:
+    storageClass: nfs-asr-2-nas2-hdd
+    size: 1Gi
   credentials:
     username: postgres
     password: postgres

@@ -8,11 +8,12 @@ metadata:
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "0"
 spec:
+  storageClassName: {{ .Values.redis.volumes.storageClass | default "local-path" }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ .Values.redis.volumes.size | default "1Gi" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -56,11 +57,12 @@ metadata:
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "0"
 spec:
+  storageClassName: {{ .Values.postgres.volumes.storageClass | default "local-path" }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ .Values.postgres.volumes.size | default "1Gi" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
