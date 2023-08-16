@@ -8,7 +8,9 @@ metadata:
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "0"
 spec:
+{{- if .Values.redis.volumes.storageClass }}
   storageClassName: {{ .Values.redis.volumes.storageClass | default "local-path" }}
+{{- end }}
   accessModes:
     - ReadWriteOnce
   resources:
@@ -57,7 +59,9 @@ metadata:
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "0"
 spec:
+{{- if .Values.postgres.volumes.storageClass }}
   storageClassName: {{ .Values.postgres.volumes.storageClass | default "local-path" }}
+{{- end }}
   accessModes:
     - ReadWriteOnce
   resources:

@@ -33,8 +33,8 @@ redis:
   pullPolicy: IfNotPresent
   port: 6379
   volumes:
-    storageClass: nfs-asr-2-nas2-hdd
     size: 1Gi
+    # storageClass: nfs-asr-2-nas2-hdd
 
 
 postgres:
@@ -44,8 +44,8 @@ postgres:
   port: 5432
   defaultDb: postgres
   volumes:
-    storageClass: nfs-asr-2-nas2-hdd
     size: 1Gi
+    # storageClass: nfs-asr-2-nas2-hdd
   credentials:
     username: postgres
     password: postgres
