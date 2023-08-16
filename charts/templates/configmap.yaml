@@ -5,6 +5,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
 {{- include "basic.labels" . | indent 4 }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-1"
 data:
   KEYGEN_ACCOUNT_ID: {{ .Values.keygen.config.accountId | default uuidv4 }}
   KEYGEN_HOST: {{ .Values.keygen.config.apiHost }}

@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
 {{- include "basic.labels" . | indent 4 }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-1"
 type: kubernetes.io/tls
 data:
   {{- $cn := "api.keygen.localhost" }}
@@ -20,6 +23,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
 {{- include "basic.labels" . | indent 4 }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-1"
 type: Opaque
 data:
   {{- $serviceCN := (printf "%s-keygen-api-service.%s.svc.cluster.local" .Release.Name .Release.Namespace) }}

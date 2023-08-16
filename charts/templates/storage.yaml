@@ -4,6 +4,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .Release.Name }}-keygen-redis-pvc
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,6 +19,9 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-keygen-redis-deployment
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
 spec:
   replicas: 1
   selector:
@@ -46,6 +52,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .Release.Name }}-keygen-postgres-pvc
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
 spec:
   accessModes:
     - ReadWriteOnce
@@ -58,6 +67,9 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-keygen-postgres-deployment
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
 spec:
   replicas: 1
   selector:
@@ -95,6 +107,9 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-keygen-redis-service
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
 spec:
   selector:
     app: keygen-redis
@@ -108,6 +123,9 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-keygen-postgres-service
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
 spec:
   selector:
     app: keygen-postgres
