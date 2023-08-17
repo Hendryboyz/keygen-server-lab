@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+    - name: nginx-container
+      image: hendryboyz/nginx:licensed-0.0.1
+      imagePullPolicy: Always
+      ports:
+        - containerPort: 80
+      env:
+        - name: KEYGEN_ACCOUNT
+          value: "115d469c-6969-419f-8e4f-f75224f936b7"
+        - name: KEYGEN_LICENSE_ID
+          value: "bd166ed5-0545-4f8c-bf02-44121833b5e5"
+        - name: KEYGEN_LICENSE_KEY
+          value: "key/eyJhY2NvdW50Ijp7ImlkIjoiMTE1ZDQ2OWMtNjk2OS00MTlmLThlNGYtZjc1MjI0ZjkzNmI3In0sInByb2R1Y3QiOnsiaWQiOiJjZGMyZTBiZS04OThmLTQxMGItYTY5MC0xYjAxN2VkMWRmZDEifSwicG9saWN5Ijp7ImlkIjoiYmNmNzY0NmMtYzY0OC00MTM3LWExODYtYzE2NzI5ODFjZDI3IiwiZHVyYXRpb24iOm51bGx9LCJ1c2VyIjpudWxsLCJsaWNlbnNlIjp7ImlkIjoiYmQxNjZlZDUtMDU0NS00ZjhjLWJmMDItNDQxMjE4MzNiNWU1IiwiY3JlYXRlZCI6IjIwMjMtMDgtMTZUMDg6MTM6NDcuNzQ3WiIsImV4cGlyeSI6IjIwMjQtMDgtMTdUMjM6NTk6MDAuMDAwWiJ9fQ==.H4ke8M5nL2nyxXID5WKPsfaHB_2eXgvYn6zSVeGqE8UUE-YHSbzX9XItFKbvQepvlKIcpV4XloMSlY8GW2vHtzLi4uLGS6hicnX_wRjL4vUriQBw_eJSj0DNGwhklHQhk0MXDSJLywTOc6fLzBELvXXLBGAq12x9AwiFb8awE4Woa2wnB5rbbBQVXDc5X4-uzVpPmAq98k5uRN-yBW8aVqX_tQOeN352vjVkMCQ9UtsijbsNj4z7O9YcAiwKdmjm_P4TsRj98W27D9HqPjafczM1EnBKTa-sA-zV39ru5k4JUyGRBpiprq4lpHy_oCPn8IQ5wDXEhDTzz5PVzffx_A=="
+        - name: KEYGEN_HOST
+          value: "small-parrot-keygen-api-service.infra.svc.cluster.local"
+      livenessProbe:
+        exec:
+          command:
+            - ./health.sh
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+        successThreshold: 1
