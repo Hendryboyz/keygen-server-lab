@@ -17,7 +17,7 @@ image:
 keygen:
   config:
     accountId: 115d469c-6969-419f-8e4f-f75224f936b7
-    apiHost: api.keygen.localhost
+    apiHost: localhost
   secret:
     adminEmail: no-reply@ailabs.tw
     adminPassword: EKdeXNTAwnHRSFtk5M4fe07dgKpYx+dzq5zotLBkrkE=
@@ -34,7 +34,7 @@ redis:
   port: 6379
   volumes:
     size: 1Gi
-    # storageClass: nfs-asr-2-nas2-hdd
+    # storageClass: local-path
 
 
 postgres:
@@ -45,7 +45,7 @@ postgres:
   defaultDb: postgres
   volumes:
     size: 1Gi
-    # storageClass: nfs-asr-2-nas2-hdd
+    # storageClass: local-path
   credentials:
     username: postgres
     password: postgres

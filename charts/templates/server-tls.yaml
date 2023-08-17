@@ -11,7 +11,7 @@ metadata:
     helm.sh/hook-weight: "-1"
 type: kubernetes.io/tls
 data:
-  {{- $cn := "api.keygen.localhost" }}
+  {{- $cn := .Values.keygen.config.apiHost }}
   {{- $cert := genSelfSignedCert $cn nil nil 365 }}
   tls.crt: {{ $cert.Cert | b64enc }}
   tls.key: {{ $cert.Key | b64enc }}
