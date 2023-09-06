@@ -17,7 +17,8 @@ image:
 keygen:
   config:
     accountId: 115d469c-6969-419f-8e4f-f75224f936b7
-    apiHost: localhost
+    apiHost: api.keygen.localhost
+
   secret:
     adminEmail: no-reply@ailabs.tw
     adminPassword: EKdeXNTAwnHRSFtk5M4fe07dgKpYx+dzq5zotLBkrkE=
